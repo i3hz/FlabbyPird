@@ -142,6 +142,7 @@ startBrick.height   =    topBrickHeight
 bricks = []
 bricks.append(startBrick)
 
+
 # M A I N _ M E N U 
 # ========================================= 
 
@@ -154,6 +155,10 @@ def mainManue():
     menu.mainloop(screen)   
     pygame.display.flip()
     clock.tick(fps)    
+    
+    
+# S C O R E _ D B _ U P D A T E
+# ==================================
 
 def dbInput(name, daCounter):
     try:
