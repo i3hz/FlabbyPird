@@ -160,13 +160,13 @@ def mainManue():
 # S C O R E _ D B _ U P D A T E
 # ==================================
 
-def dbInput(name, daCounter):
+def dbInput(Name, daCounter):
     try:
         db = sqlite3.connect("flabbyPird.db")
         cursor = db.cursor()
 
         sql = "insert into score values (?, ?)"
-        val = (name, daCounter)
+        val = (Name, daCounter)
         print(sql)
         print(val)
         cursor.execute(sql,val)
@@ -181,11 +181,11 @@ def dbInput(name, daCounter):
 # S C O R E _ M E N U
 # =================================
 
-def score(daCounter):
+def score (daCounter):
         menu = pygame_menu.Menu('Flabby Pird', 400, 300, theme=pygame_menu.themes.THEME_SOLARIZED)
         menu.add.label(daCounter)
-        menu.add.text_input('Name: ', default='Johannes Klaus')
-        menu.add.button('Save', dbInput(name, daCounter),mainManue)
+        name = menu.add.text_input('Name: ', default='Johannes Klaus', onchange=dbInput)
+        menu.add.button('Save', dbInput(name.get_value(), daCounter),mainManue)
         menu.mainloop(screen)   
         pygame.display.flip()
         clock.tick(fps)  
