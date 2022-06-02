@@ -4,6 +4,8 @@ FlabbyPird.py
 26.04.2022
 '''
 
+from email.charset import Charset
+from locale import CHAR_MAX
 from multiprocessing.sharedctypes import Value
 from turtle import onclick
 import pygame
@@ -13,6 +15,8 @@ from sys import *
 import random
 import time
 import sqlite3, sys
+import functools
+import operator
 
 # Variables ====================
 
@@ -161,42 +165,63 @@ def mainManue():
     clock.tick(fps)   
     
 
-# S C O R E _ D B _ U P D A T E
+# S C O R E _ D B _ M A N A G E M E N T
 # ==================================
 
 def dbInput():
     try:
         db = sqlite3.connect("flabbyPird.db")
         cursor = db.cursor()
-        sql = "insert into score values (?, ?)"
-        val = (pird.player, pird.counter)
+        print(pird.player)
+        sql = "UPDATE score SET name = {0}, Score = {1} WHERE Score <= {1}",format(pird.player, str(pird.counter))
         print(sql)
-        print(val)
-        cursor.execute(sql,val)
+        cursor.execute(sql)
         db.commit()   
+        
     except: 
         print("Fehler beim INSERT - Datensatz wurde nicht gespeichert !")
-        print("Unexpected error:", sys.exc_info()[0])  
+        print("Unexpected error:", sys.exc_info()[0],sys.exc_info()[1],sys.exc_info()[2] )  
     finally:
         db.close()
 
 
-# def dbOutput(lvl):
-#     try:
-#         db = sqlite3.connect("flabbyPird.db")
-#         cursor = db.cursor()
+def dbOutput(lvl):
+    try:
+        db = sqlite3.connect("flabbyPird.db")
+        cursor = db.cursor()
+        sql = "SELECT * FROM score WHERE rowid = {0};".format(lvl)
+        print(sql)
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        db.commit()
+        
+        for e in result:
+                output = e[0] + ' : ' + str(e[1])
+                print(output)
+        return output 
+    except: 
+        print("Fehler beim SELECT - Datensatz konnte nicht gelesen werden !")
+        print("Unexpected error:", sys.exc_info()[1])  
+    finally:
+        db.close()
 
-#         sql = "SELECT name, score score values (?, ?)"
-#         val = (Name, daCounter)
-#         print(sql)
-#         print(val)
-#         cursor.execute(sql,val)
-#         db.commit()   
-#     except: 
-#         print("Fehler beim INSERT - Datensatz wurde nicht gespeichert !")
-#         print("Unexpected error:", sys.exc_info()[0])  
-#     finally:
-#         db.close()
+def dbSearch(count):
+    try:
+        db = sqlite3.connect("flabbyPird.db")
+        cursor = db.cursor()
+        # Searching for the position which is lower than players counter
+        sql = "SELECT rowid FROM score WHERE Score <= {0};".format(count)
+        print(sql)
+        cursor.execute(sql)
+        result = cursor.fetchone()
+        db.commit()
+        print(result) 
+    except: 
+        print("Fehler beim SELECT - Datensatz konnte nicht gelesen werden !")
+        print("Unexpected error:", sys.exc_info()[1])  
+    finally:
+        db.close()
+
 
 
 
@@ -210,7 +235,7 @@ def getName(name):
 
 def score(daCounter):
         menu = pygame_menu.Menu('Flabby Pird', 400, 300, theme=pygame_menu.themes.THEME_SOLARIZED)
-        menu.add.text_input('Name: ', default='Johannes Klaus', onchange=getName)
+        menu.add.text_input('Name: ', default='PLR', onchange=getName, maxchar=3)
         menu.add.label(daCounter)
         menu.add.button('Save', dbInput)
         menu.add.button('MAIN', mainManue)
@@ -226,9 +251,9 @@ def score(daCounter):
 
 def scoreboard():
     menu = pygame_menu.Menu('Flabby Pird', 400, 300, theme=pygame_menu.themes.THEME_SOLARIZED)
-    # menu.add.label(dbOutput(1))
-    # menu.add.label(dbOutput(2))
-    # menu.add.label(dbOutput(3))
+    menu.add.label(dbOutput(1))
+    menu.add.label(dbOutput(2))
+    menu.add.label(dbOutput(3))
     menu.add.button('Menu', start_the_game)
     menu.mainloop(screen)   
     pygame.display.flip()
@@ -262,6 +287,7 @@ def start_the_game():
             #================================
             if i.bodytop.colliderect(pird.body) or i.bodybottom.colliderect(pird.body) or border.body.colliderect(pird.body):
                 #time.sleep(3)
+                dbSearch(pird.counter)
                 score(pird.counter)
             # ==============================
 
