@@ -4,6 +4,8 @@ FlabbyPird.py
 26.04.2022
 '''
 
+from multiprocessing.sharedctypes import Value
+from turtle import onclick
 import pygame
 from pygame.locals import *
 import pygame_menu 
@@ -82,6 +84,8 @@ class Pird():
         self.height = height
         self.speed = speed
         self.jumpVar = -16
+        self.player = ""
+        self.counter = 0
 
 
     def drawPird(self):
@@ -143,30 +147,29 @@ bricks = []
 bricks.append(startBrick)
 
 
+
 # M A I N _ M E N U 
 # ========================================= 
 
 def mainManue():
     menu = pygame_menu.Menu('Flabby Pird', 400, 300, theme=pygame_menu.themes.THEME_SOLARIZED)
-    #menu.add.text_input('Name: ', default='Johannes Klaus')
     menu.add.button('Play', start_the_game)
     menu.add.button('Score', scoreboard)       
     menu.add.button('Quit', pygame_menu.events.EXIT)       
     menu.mainloop(screen)   
     pygame.display.flip()
-    clock.tick(fps)    
+    clock.tick(fps)   
     
-    
+
 # S C O R E _ D B _ U P D A T E
 # ==================================
 
-def dbInput(Name, daCounter):
+def dbInput():
     try:
         db = sqlite3.connect("flabbyPird.db")
         cursor = db.cursor()
-
         sql = "insert into score values (?, ?)"
-        val = (Name, daCounter)
+        val = (pird.player, pird.counter)
         print(sql)
         print(val)
         cursor.execute(sql,val)
@@ -178,17 +181,44 @@ def dbInput(Name, daCounter):
         db.close()
 
 
+# def dbOutput(lvl):
+#     try:
+#         db = sqlite3.connect("flabbyPird.db")
+#         cursor = db.cursor()
+
+#         sql = "SELECT name, score score values (?, ?)"
+#         val = (Name, daCounter)
+#         print(sql)
+#         print(val)
+#         cursor.execute(sql,val)
+#         db.commit()   
+#     except: 
+#         print("Fehler beim INSERT - Datensatz wurde nicht gespeichert !")
+#         print("Unexpected error:", sys.exc_info()[0])  
+#     finally:
+#         db.close()
+
+
+
+def getName(name):
+    pird.player = name
+
+
+
 # S C O R E _ M E N U
 # =================================
 
-def score (daCounter):
+def score(daCounter):
         menu = pygame_menu.Menu('Flabby Pird', 400, 300, theme=pygame_menu.themes.THEME_SOLARIZED)
+        menu.add.text_input('Name: ', default='Johannes Klaus', onchange=getName)
         menu.add.label(daCounter)
-        name = menu.add.text_input('Name: ', default='Johannes Klaus', onchange=dbInput)
-        menu.add.button('Save', dbInput(name.get_value(), daCounter),mainManue)
+        menu.add.button('Save', dbInput)
+        menu.add.button('MAIN', mainManue)
         menu.mainloop(screen)   
         pygame.display.flip()
         clock.tick(fps)  
+        
+        
 
     
 # S C O R E B O A R D
@@ -196,7 +226,10 @@ def score (daCounter):
 
 def scoreboard():
     menu = pygame_menu.Menu('Flabby Pird', 400, 300, theme=pygame_menu.themes.THEME_SOLARIZED)
-    menu.add.button('Menu', mainManue)
+    # menu.add.label(dbOutput(1))
+    # menu.add.label(dbOutput(2))
+    # menu.add.label(dbOutput(3))
+    menu.add.button('Menu', start_the_game)
     menu.mainloop(screen)   
     pygame.display.flip()
     clock.tick(fps)    
@@ -206,7 +239,7 @@ def scoreboard():
 # =================================================
 
 def start_the_game():
-    counter = 0
+    pird.counter = 0
     go = "j"
     while go == "j":
         screen.fill(BLACK)
@@ -220,16 +253,16 @@ def start_the_game():
             i.drawBrick()
             i.walk()
             if i.left <= Width*0.4 and i.left >= Width*0.39:       
-                counter += 1     
+                pird.counter += 1     
                 topBrickHeight = random.randint(Height*0.2, Height*0.8)
                 bricks.append(Bricks(screen, YELLOW, Width + partikel , 0, partikel*2, startBrick.height, brickspeed))
-                bricks[counter].height = topBrickHeight
+                bricks[pird.counter].height = topBrickHeight
 
             # Prepare To Die 
             #================================
             if i.bodytop.colliderect(pird.body) or i.bodybottom.colliderect(pird.body) or border.body.colliderect(pird.body):
-                time.sleep(3)
-                score(counter)
+                #time.sleep(3)
+                score(pird.counter)
             # ==============================
 
         # ===========================
@@ -244,7 +277,7 @@ def start_the_game():
                     pird.jumpUp()
 
         my_font = pygame.font.Font(None, 50)
-        surface = my_font.render(str(counter), True, (255,255,255))
+        surface = my_font.render(str(pird.counter), True, (255,255,255))
         text_rect = surface.get_rect()
         text_rect.center = (Width*0.75, Height * 0.15)
         screen.blit(surface, text_rect)
