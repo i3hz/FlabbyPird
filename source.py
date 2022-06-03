@@ -173,9 +173,10 @@ def dbInput():
         db = sqlite3.connect("flabbyPird.db")
         cursor = db.cursor()
         print(pird.player)
-        sql = "UPDATE score SET name = {0}, Score = {1} WHERE Score <= {1}",format(pird.player, str(pird.counter))
-        print(sql)
-        cursor.execute(sql)
+        #sql = "UPDATE score SET name = {0}, Score = {1} WHERE Score <= {1}",format(pird.player, str(pird.counter))
+        print("UPDATE score SET name = ?, Score = ? WHERE Score <= ?",(pird.player, str(pird.counter)))
+
+        cursor.execute("UPDATE score SET name = ?, Score = ? WHERE [Score <= ?]",(pird.player, str(pird.counter)))
         db.commit()   
         
     except: 
