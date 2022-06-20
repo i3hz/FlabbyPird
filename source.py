@@ -1,3 +1,4 @@
+
 '''
 FlabbyPird.py
 @Klaus
@@ -90,6 +91,7 @@ class Pird():
         self.jumpVar = -16
         self.player = ""
         self.counter = 0
+        self.rowID = 0
 
 
     def drawPird(self):
@@ -173,10 +175,11 @@ def dbInput():
         db = sqlite3.connect("flabbyPird.db")
         cursor = db.cursor()
         print(pird.player)
-        sql = "UPDATE score SET name = {0}, Score = {1} WHERE Score <= {1}",format(pird.player, str(pird.counter))
+        dbRowIdSearch(pird.counter)
+        sql = "UPDATE score SET name = {0}, Score = {1} WHERE rowid = {2}".format(pird.player, str(pird.counter),pird.rowID)
         print(sql)
 
-        cursor.execute("UPDATE score SET name = ?, Score = ? WHERE [Score <= ?]",(pird.player, str(pird.counter)))
+        cursor.execute(sql)
         db.commit()   
         
     except: 
@@ -206,7 +209,7 @@ def dbOutput(lvl):
     finally:
         db.close()
 
-def dbSearch(count):
+def dbRowIdSearch(count):
     try:
         db = sqlite3.connect("flabbyPird.db")
         cursor = db.cursor()
@@ -214,9 +217,8 @@ def dbSearch(count):
         sql = "SELECT rowid FROM score WHERE Score <= {0};".format(count)
         print(sql)
         cursor.execute(sql)
-        result = cursor.fetchone()
+        pird.rowID = cursor.fetchone()
         db.commit()
-        print(result) 
     except: 
         print("Fehler beim SELECT - Datensatz konnte nicht gelesen werden !")
         print("Unexpected error:", sys.exc_info()[1])  

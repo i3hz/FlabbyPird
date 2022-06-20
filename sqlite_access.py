@@ -1,5 +1,5 @@
 '''
-sqlite_access
+sqlite_access_flabbyPird
 @J_Klaus
 '''
 
@@ -13,13 +13,15 @@ class Access():
         self.db = db_name
         self.cu = cursor
 
-
+    def connect(self.db):
+        db = sqlite3.connect(self.db)
+        cursor = db.cursor()
+        return cursor, db
 
 
     def Input(table_name, iName, iCounter):
         try:
-            db = sqlite3.connect(db)
-            cursor = db.cursor()
+            connect(db)
             cursor.execute("INSERT into {0} Value {1}, {2}",format(table_name, iName, iCounter))
             db.commit()   
         except: 
