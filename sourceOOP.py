@@ -162,6 +162,7 @@ class Menue():
 
     def get_name(self,name):
         pird.player = name
+        
 
     def score(self,daCounter):
         menu = pygame_menu.Menu('SCORE', self.height, self.width, theme=pygame_menu.themes.THEME_SOLARIZED)
