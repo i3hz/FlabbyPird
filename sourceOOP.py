@@ -6,16 +6,16 @@ FlabbyPird.py
 '''
 
 
-
+from dataclasses import dataclass
+from locale import CHAR_MAX
+from multiprocessing.sharedctypes import Value
+from turtle import onclick
 import pygame
 from pygame.locals import *
 import pygame_menu 
 from sys import *
 import random
 import sqlite3, sys
-
-
-
 
 # Variables ====================
 
@@ -32,15 +32,6 @@ BLACK  = (0,0,0)
 YELLOW = (255,255,0)
 RED = (205,51,51)
 GREEN = (0,128,0)
-
-
-# INITIALIZE =====================
-
-pygame.init()
-clock = pygame.time.Clock()
-screen = pygame.display.set_mode([Width, Height])      
-pygame.display.set_caption("FlabbyPird")
-
 
 # Walking Bricks ================
 # =============================================
@@ -71,7 +62,7 @@ class Bricks():
         self.left -= self.speed
 
 
-    # NOT INCLUDED YET
+    # not included jet
     # ========================
     def lvlUp(self):
         self.speed *= 1.2
@@ -99,11 +90,11 @@ class Pird():
 
     # fallin` down faster and faster
     # ===================================
-
     def fallDown(self):
         if self.top < Height:
             self.top += self.speed
             self.speed += 1.1
+
 
     def jumpUp(self):
         if self.jumpVar == -16:
@@ -131,6 +122,16 @@ class Bottom():
         self.body=pygame.draw.rect(self.where, self.colour, [self.left, self.top, self.width, self.height])
 
 
+# ======================================
+# M A I N ==============================
+# ======================================
+
+pygame.init()
+clock = pygame.time.Clock()
+screen = pygame.display.set_mode([Width, Height])      
+pygame.display.set_caption("FlabbyPird")
+
+
 # objects
 # =========================
 
@@ -141,11 +142,68 @@ startBrick          =    Bricks(screen, YELLOW , Width*2, 0, partikel*2, Height*
 startBrick.height   =    topBrickHeight
 
 
+
+
+
+# M A I N _ M E N U 
+# ========================================= 
+
+
+class Menue():
+    def __init__(self, daCounter):
+        self.daCounter = daCounter
+        
+
+    # M A I N _ M E N U 
+    # ========================================= 
+
+    def mainManue(self):
+        menu = pygame_menu.Menu('Flabby Pird', 400, 300, theme=pygame_menu.themes.THEME_SOLARIZED)
+        menu.add.button('Play', start_the_game)
+        menu.add.button('Score', self.scoreboard)       
+        menu.add.button('Quit', pygame_menu.events.EXIT)       
+        menu.mainloop(screen)   
+        pygame.display.flip()
+        clock.tick(fps)   
+
+    # S C O R E _ M E N U
+    # =================================
+
+    def getName(name):
+            pird.player = name
+            
+
+    def score(self,daCounter):
+        menu = pygame_menu.Menu('Flabby Pird', 400, 300, theme=pygame_menu.themes.THEME_SOLARIZED)
+        menu.add.text_input('Name: ', default='PLR', onchange=self.getName, maxchar=3)
+        menu.add.label(daCounter)
+        menu.add.button('Save', DB.dbInput)
+        menu.add.button('MAIN', self.mainManue)
+        menu.mainloop(screen)   
+        pygame.display.flip()
+        clock.tick(fps)  
+            
+    
+    # S C O R E B O A R D
+    # ==========================================
+
+    def scoreboard(self):
+        menu = pygame_menu.Menu('Flabby Pird', 400, 300, theme=pygame_menu.themes.THEME_SOLARIZED)
+        menu.add.label(DB.dbOutput(0))
+        menu.add.label(DB.dbOutput(1))
+        menu.add.label(DB.dbOutput(2))
+        menu.add.button('Refresh', DB.dbRefresh)
+        menu.add.button('Menu', self.mainManue)
+        menu.mainloop(screen)   
+        pygame.display.flip()
+        clock.tick(fps)    
+
 # S C O R E _ D B _ M A N A G E M E N T
 # =============================================
 
 class DB():
-    @staticmethod
+    def __init__():
+        game = Menue(pird.counter)
     def dbRefresh():
         try:
             db = sqlite3.connect("flabbyPird.db")
@@ -171,26 +229,10 @@ class DB():
             db = sqlite3.connect("flabbyPird.db")
             cursor = db.cursor()
             name = str(pird.player)
-            sco = pird.counter
-            insertPosition = 1
-            search = "SELECT Score FROM score ORDER BY Score DESC;"
-            cursor.execute(search)
-            catch = cursor.fetchall()
-            #print(catch)
-            for i in catch:
-                #print(i[0])
-                if sco < i[0]: 
-                    #print(i)
-                    insertPosition += 1
-                    
-            sql = "UPDATE score SET name = ?, score = ? WHERE rowid = ?;"    
-            delete = "DELETE FROM score WHERE rowid = 4;"   
-            cursor.execute(sql,(name,sco,insertPosition))
-            #order = sql,(name,sco,insertPosition)
-            #print(order)
+            sco = str(pird.counter)
+            sql = "INSERT INTO score (name, Score) VALUES (?,?);"       
+            cursor.execute(sql,(name,sco))
             db.commit()         
-            cursor.execute(delete)
-            db.commit()
             print("FINISH")
             Menue.scoreboard()
         except: 
@@ -208,7 +250,7 @@ class DB():
             catch = cursor.fetchall()
             zeile = catch[lvl]     
             output = zeile[0] + ' : ' + str(zeile[1])
-            #print(output)
+            print(output)
             db.commit()
             return output     
         except: 
@@ -217,75 +259,9 @@ class DB():
         finally:
             db.close()
 
-    
-    def dbSearch():
-        try:
-            db = sqlite3.connect("flabbyPird.db")
-            cursor = db.cursor()
-            sql = "SELECT min(Score) FROM score;"
-            print(sql)
-            cursor.execute(sql)
-            catch = cursor.fetchone()
-            db.commit()           
-            return catch[0]     
-        except: 
-            print("Fehler beim SELECT - Datensatz konnte nicht gelesen werden !")
-            print("Unexpected error:", sys.exc_info()[0],sys.exc_info()[1],sys.exc_info()[2] )  
-        finally:
-            db.close()
-    
 
 
-
-class Menue():
-    @staticmethod
-
-    def getName(name):
-        pird.player = name
-        return pird.player 
-
-    # S C O R E B O A R D
-    # ==========================================
-
-    def scoreboard():
-        menu = pygame_menu.Menu('Scoreboard', 400, 300, theme=pygame_menu.themes.THEME_SOLARIZED)
-        menu.add.label(DB.dbOutput(0))
-        menu.add.label(DB.dbOutput(1))
-        menu.add.label(DB.dbOutput(2))       
-        menu.add.button('Menu', Menue.mainManue)
-        menu.add.button('Delete Scoarboard', DB.dbRefresh)
-        menu.mainloop(screen)   
-        pygame.display.flip()
-        clock.tick(fps)    
-
-    # M A I N _ M E N U 
-    # ========================================= 
-
-    def mainManue():
-        menu = pygame_menu.Menu('Flabby Pird', 400, 300, theme=pygame_menu.themes.THEME_SOLARIZED)
-        menu.add.button('Play', start_the_game)
-        menu.add.button('Score',Menue.scoreboard)       
-        menu.add.button('Quit', pygame_menu.events.EXIT)       
-        menu.mainloop(screen)   
-        pygame.display.flip()
-        clock.tick(fps)   
-
-    # S C O R E _ M E N U
-    # =================================
-
-    def score(daCounter):
-        menu = pygame_menu.Menu('Scoreboard', 400, 300, theme=pygame_menu.themes.THEME_SOLARIZED)
-        menu.add.text_input('Name: ', default='---', onchange=Menue.getName, maxchar=3)
-        menu.add.label(daCounter)
-        menu.add.button('Save', DB.dbInput)
-        menu.add.button('MAIN', Menue.mainManue)
-        menu.mainloop(screen)   
-        pygame.display.flip()
-        clock.tick(fps)  
-            
-    
-    
-# SET DEFAULT SETTINGS
+# DEFAULT SETTINGS
 # ============================================
 def default():  
     # DEFAULT SETTINGS FOR PIRD
@@ -312,12 +288,11 @@ def default():
 
     print("DEFAUL-VALUES SETTED")
 
+# ============================================
 
+# SHOW SCORE:
 
-# SHOW COUNTER
-# ===================================
-
-def showCounter():
+def showScore():
     my_font = pygame.font.Font(None, 50)
     surface = my_font.render(str(pird.counter), True, (255,255,255))
     text_rect = surface.get_rect()
@@ -325,7 +300,11 @@ def showCounter():
     screen.blit(surface, text_rect)
 
 
-# M A I N _ G A M E_LOOP
+# START OBJECT 
+# ===============================
+game                =    Menue(pird.counter)
+
+# M A I N _ G A M E
 # =================================================
 
 def start_the_game():
@@ -350,33 +329,33 @@ def start_the_game():
                 bricks.append(Bricks(screen, YELLOW, Width + partikel , 0, partikel*2, startBrick.height, brickspeed))
                 bricks[pird.counter].height = topBrickHeight
 
-            # Prepare To Die 
+            # COLLISSION DETECTION
             #================================
             if i.bodytop.colliderect(pird.body) or i.bodybottom.colliderect(pird.body) or border.body.colliderect(pird.body):
                 default()
-                compareCounter = int(DB.dbSearch())
-                if pird.counter >= compareCounter:
-                    Menue.score(pird.counter)
+                game.score(pird.counter)
                 go = "n"
-            # ==============================
-
         
-
+        # QUIT GAME
+        # ===================================
         for event in pygame.event.get():
             if event.type==pygame.QUIT or (event.type==pygame.KEYDOWN and event.key==pygame.K_ESCAPE):
                 go = "n"
 
             # jumpin`OutOfDeath ==============
+            # ===================================
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     pird.jumpUp()
 
-        showCounter()
+        showScore()
+        
         pygame.display.flip()
         clock.tick(fps)
 
 
 
-# R U N _ M A I N _ M E N U E
+# R U N _ M A I N
 # ===================================
-Menue.mainManue()
+game.mainManue()
+
