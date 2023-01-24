@@ -125,7 +125,6 @@ clock = pygame.time.Clock()
 screen = pygame.display.set_mode([Width, Height])      
 pygame.display.set_caption("FlabbyPird")
 
-
 # objects
 # =========================
 
@@ -135,66 +134,59 @@ topBrickHeight      =    random.randint(Height*0.3, Height*0.6)
 startBrick          =    Bricks(screen, YELLOW , Width*2, 0, partikel*2, Height*0.4, brickspeed)
 startBrick.height   =    topBrickHeight
 
-
-# M E N U 
-# ========================================= 
+# M E N U
+# =========================================
 
 class Menue():
-    def __init__(self, daCounter):
-        self.daCounter = daCounter
-        self.height = 400
-        self.width = 320
-        
+    height = 400
+    width = 320
     # M A I N _ M E N U
     # =========================================
-
-    def mainManue(self):
-        menu = pygame_menu.Menu('FLABBY PIRD', self.height, self.width, theme=pygame_menu.themes.THEME_SOLARIZED)
+    @staticmethod
+    def mainManue():
+        menu = pygame_menu.Menu('FLABBY PIRD', Menue.height, Menue.width, theme=pygame_menu.themes.THEME_SOLARIZED)
         menu.add.button('PLAY', start_the_game)
-        menu.add.button('SCORE', self.scoreboard)
+        menu.add.button('SCORE', Menue.scoreboard)
         menu.add.button('QUIT', pygame_menu.events.EXIT)
-        menu.mainloop(screen)   
+        menu.mainloop(screen)
         pygame.display.flip()
-        clock.tick(fps)   
+        clock.tick(fps)
 
     # S C O R E _ M E N U
     # =================================
+    @staticmethod
+    def get_name(name):
+        pird.player = name.upper()
 
-    def get_name(self,name):
-        pird.player = name
-        
-
-    def score(self,daCounter):
-        menu = pygame_menu.Menu('SCORE', self.height, self.width, theme=pygame_menu.themes.THEME_SOLARIZED)
-        pird.player = menu.add.text_input('Name: ', default='PLR', onchange=self.get_name ,maxchar=3).get_value()
+    @staticmethod
+    def score(daCounter):
+        menu = pygame_menu.Menu('SCORE', Menue.height, Menue.width, theme=pygame_menu.themes.THEME_SOLARIZED)
+        pird.player = menu.add.text_input('Name: ', default='PLR', onchange=Menue.get_name ,maxchar=3, ).get_value().upper()
         menu.add.label(daCounter)
         menu.add.button('SAVE', DB.dbInput)
-        menu.add.button('MAIN', self.mainManue)
-        menu.mainloop(screen)   
+        menu.add.button('MENU', Menue.mainManue)
+        menu.mainloop(screen)
         pygame.display.flip()
         clock.tick(fps)
-            
-    
+
     # S C O R E B O A R D
     # ==========================================
-
-    def scoreboard(self):
-        menu = pygame_menu.Menu('SCOREBOARD', self.height, self.width, theme=pygame_menu.themes.THEME_SOLARIZED)
+    @staticmethod
+    def scoreboard():
+        menu = pygame_menu.Menu('SCOREBOARD', Menue.height, Menue.width, theme=pygame_menu.themes.THEME_SOLARIZED)
         menu.add.label(DB.dbOutput(0))
         menu.add.label(DB.dbOutput(1))
         menu.add.label(DB.dbOutput(2))
-        menu.add.button('RESET', DB.dbRefresh)
-        menu.add.button('MENUE', self.mainManue)
-        menu.mainloop(screen)   
+        menu.add.button('MENU', Menue.mainManue)
+        menu.add.button('RESET SCOREBOARD', DB.dbRefresh)
+        menu.mainloop(screen)
         pygame.display.flip()
-        clock.tick(fps)    
+        clock.tick(fps)
 
 # S C O R E _ D B _ M A N A G E M E N T
 # =============================================
 
-class DB():
-    def __init__():
-        game = Menue(pird.counter)
+class DB():  
     def dbRefresh():
         try:
             db = sqlite3.connect("flabbyPird.db")
@@ -250,6 +242,24 @@ class DB():
         finally:
             db.close()
 
+    def find_smallest_counter():
+        try:
+            db = sqlite3.connect("flabbyPird.db")
+            cursor = db.cursor()
+            sql = "SELECT MIN(Score) FROM score;"
+            cursor.execute(sql)
+            catch = cursor.fetchone()
+            db.commit()
+            sol = catch[0]
+            print(sol)
+            return sol
+        except: 
+            print("Fehler beim Search - Datensatz konnte nicht gelesen werden !")
+            print("Unexpected error:", sys.exc_info()[0],sys.exc_info()[1],sys.exc_info()[2] )  
+        finally:
+            db.close()
+
+
 
 
 # DEFAULT SETTINGS
@@ -293,12 +303,13 @@ def showScore():
 
 # START OBJECT
 # ===============================
-game                =    Menue(pird.counter)
+
 
 # M A I N _ G A M E
 # =================================================
 
 def start_the_game():
+    smalles_counter = int(DB.find_smallest_counter())
     pird.counter = 0
     bricks = []
     bricks.append(startBrick)
@@ -324,7 +335,8 @@ def start_the_game():
             #================================
             if i.bodytop.colliderect(pird.body) or i.bodybottom.colliderect(pird.body) or border.body.colliderect(pird.body):
                 default()
-                game.score(pird.counter)
+                if pird.counter > smalles_counter:
+                    Menue.score(pird.counter)
                 go_game = "n"
 
         # QUIT GAME
@@ -345,4 +357,4 @@ def start_the_game():
 
 # R U N _ M A I N
 # ===================================
-game.mainManue()
+Menue.mainManue()
