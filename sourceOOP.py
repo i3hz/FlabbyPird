@@ -6,16 +6,11 @@ FlabbyPird.py
 '''
 
 
-from dataclasses import dataclass
-from locale import CHAR_MAX
-from multiprocessing.sharedctypes import Value
-from turtle import onclick
 import pygame
-from pygame.locals import *
 import pygame_menu 
-from sys import *
 import random
 import sqlite3, sys
+
 
 # Variables ====================
 
@@ -60,7 +55,6 @@ class Bricks():
 
     def walk(self):        
         self.left -= self.speed
-
 
     # not included jet
     # ========================
@@ -142,26 +136,23 @@ startBrick          =    Bricks(screen, YELLOW , Width*2, 0, partikel*2, Height*
 startBrick.height   =    topBrickHeight
 
 
-
-
-
-# M A I N _ M E N U 
+# M E N U 
 # ========================================= 
-
 
 class Menue():
     def __init__(self, daCounter):
         self.daCounter = daCounter
+        self.height = 400
+        self.width = 320
         
-
-    # M A I N _ M E N U 
-    # ========================================= 
+    # M A I N _ M E N U
+    # =========================================
 
     def mainManue(self):
-        menu = pygame_menu.Menu('Flabby Pird', 400, 300, theme=pygame_menu.themes.THEME_SOLARIZED)
-        menu.add.button('Play', start_the_game)
-        menu.add.button('Score', self.scoreboard)       
-        menu.add.button('Quit', pygame_menu.events.EXIT)       
+        menu = pygame_menu.Menu('FLABBY PIRD', self.height, self.width, theme=pygame_menu.themes.THEME_SOLARIZED)
+        menu.add.button('PLAY', start_the_game)
+        menu.add.button('SCORE', self.scoreboard)
+        menu.add.button('QUIT', pygame_menu.events.EXIT)
         menu.mainloop(screen)   
         pygame.display.flip()
         clock.tick(fps)   
@@ -169,31 +160,30 @@ class Menue():
     # S C O R E _ M E N U
     # =================================
 
-    def getName(name):
-            pird.player = name
-            
+    def get_name(self,name):
+        pird.player = name
 
     def score(self,daCounter):
-        menu = pygame_menu.Menu('Flabby Pird', 400, 300, theme=pygame_menu.themes.THEME_SOLARIZED)
-        menu.add.text_input('Name: ', default='PLR', onchange=self.getName, maxchar=3)
+        menu = pygame_menu.Menu('SCORE', self.height, self.width, theme=pygame_menu.themes.THEME_SOLARIZED)
+        pird.player = menu.add.text_input('Name: ', default='PLR', onchange=self.get_name ,maxchar=3).get_value()
         menu.add.label(daCounter)
-        menu.add.button('Save', DB.dbInput)
+        menu.add.button('SAVE', DB.dbInput)
         menu.add.button('MAIN', self.mainManue)
         menu.mainloop(screen)   
         pygame.display.flip()
-        clock.tick(fps)  
+        clock.tick(fps)
             
     
     # S C O R E B O A R D
     # ==========================================
 
     def scoreboard(self):
-        menu = pygame_menu.Menu('Flabby Pird', 400, 300, theme=pygame_menu.themes.THEME_SOLARIZED)
+        menu = pygame_menu.Menu('SCOREBOARD', self.height, self.width, theme=pygame_menu.themes.THEME_SOLARIZED)
         menu.add.label(DB.dbOutput(0))
         menu.add.label(DB.dbOutput(1))
         menu.add.label(DB.dbOutput(2))
-        menu.add.button('Refresh', DB.dbRefresh)
-        menu.add.button('Menu', self.mainManue)
+        menu.add.button('RESET', DB.dbRefresh)
+        menu.add.button('MENUE', self.mainManue)
         menu.mainloop(screen)   
         pygame.display.flip()
         clock.tick(fps)    
@@ -216,21 +206,21 @@ class DB():
             for i in range(3):
                 cursor.execute(insert)
             db.commit()
-            print("REFRESH COMPLETE")
+            print("RESET COMPLETE")
             Menue.scoreboard()
         except: 
-            print("Fehler beim INSERT - Datensatz wurde nicht gespeichert !")
+            print("Fehler beim Reset - Datensatz wurde nicht reseted !")
             print("Unexpected error:", sys.exc_info()[0],sys.exc_info()[1],sys.exc_info()[2] )  
         finally:
             db.close()
-  
+
     def dbInput():
         try:
             db = sqlite3.connect("flabbyPird.db")
             cursor = db.cursor()
             name = str(pird.player)
             sco = str(pird.counter)
-            sql = "INSERT INTO score (name, Score) VALUES (?,?);"       
+            sql = "INSERT INTO score (name, Score) VALUES (?,?);"
             cursor.execute(sql,(name,sco))
             db.commit()         
             print("FINISH")
@@ -250,9 +240,9 @@ class DB():
             catch = cursor.fetchall()
             zeile = catch[lvl]     
             output = zeile[0] + ' : ' + str(zeile[1])
-            print(output)
+            # print(output)
             db.commit()
-            return output     
+            return output
         except: 
             print("Fehler beim SELECT - Datensatz konnte nicht gelesen werden !")
             print("Unexpected error:", sys.exc_info()[0],sys.exc_info()[1],sys.exc_info()[2] )  
@@ -263,7 +253,7 @@ class DB():
 
 # DEFAULT SETTINGS
 # ============================================
-def default():  
+def default():
     # DEFAULT SETTINGS FOR PIRD
     # =================================
     pird.left = Width*0.3
@@ -273,7 +263,7 @@ def default():
     pird.speed = downspeed
     pird.jumpVar = -16
     pird.player = ""
-    
+
     # DEFAULT SETTINGS FOR BRICKS
     # ========================================
     startBrick.left = Width*2
@@ -286,7 +276,7 @@ def default():
     startBrick.gapHeight = Height/4
     startBrick.gaplocker = random.randint(Height*0.3, Height*0.6)
 
-    print("DEFAUL-VALUES SETTED")
+    #print("DEFAUL-VALUES SETTED")
 
 # ============================================
 
@@ -300,7 +290,7 @@ def showScore():
     screen.blit(surface, text_rect)
 
 
-# START OBJECT 
+# START OBJECT
 # ===============================
 game                =    Menue(pird.counter)
 
@@ -311,8 +301,8 @@ def start_the_game():
     pird.counter = 0
     bricks = []
     bricks.append(startBrick)
-    go = "j"
-    while go == "j":
+    go_game = "j"
+    while go_game == "j":
         screen.fill(BLACK)
         # ====== suicide pird
         border.draw()
@@ -323,8 +313,8 @@ def start_the_game():
         for i in bricks:
             i.drawBrick()
             i.walk()
-            if i.left <= Width*0.4 and i.left >= Width*0.39:       
-                pird.counter += 1     
+            if i.left <= Width*0.4 and i.left >= Width*0.39:
+                pird.counter += 1
                 topBrickHeight = random.randint(Height*0.2, Height*0.8)
                 bricks.append(Bricks(screen, YELLOW, Width + partikel , 0, partikel*2, startBrick.height, brickspeed))
                 bricks[pird.counter].height = topBrickHeight
@@ -334,13 +324,13 @@ def start_the_game():
             if i.bodytop.colliderect(pird.body) or i.bodybottom.colliderect(pird.body) or border.body.colliderect(pird.body):
                 default()
                 game.score(pird.counter)
-                go = "n"
-        
+                go_game = "n"
+
         # QUIT GAME
         # ===================================
         for event in pygame.event.get():
             if event.type==pygame.QUIT or (event.type==pygame.KEYDOWN and event.key==pygame.K_ESCAPE):
-                go = "n"
+                go_game = "n"
 
             # jumpin`OutOfDeath ==============
             # ===================================
@@ -349,13 +339,9 @@ def start_the_game():
                     pird.jumpUp()
 
         showScore()
-        
         pygame.display.flip()
         clock.tick(fps)
-
-
 
 # R U N _ M A I N
 # ===================================
 game.mainManue()
-
