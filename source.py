@@ -1,16 +1,13 @@
-
 '''
 FlabbyPird.py
 @Klaus
 26.04.2022
 '''
 
-
-import pygame
-import pygame_menu 
-import random
 import sqlite3, sys
-
+import random
+import pygame
+import pygame_menu
 
 # Variables ====================
 
@@ -36,7 +33,7 @@ class Bricks():
         self.where = where
         self.colour = colour
         self.left = left
-        self.top = top 
+        self.top = top
         self.bottomtop = 0
         self.width = width
         self.height = height
@@ -44,6 +41,8 @@ class Bricks():
         self.speed = speed
         self.gapHeight = Height/4
         self.gaplocker = random.randint(Height*0.3, Height*0.6)
+        self.bodytop : pygame.surface
+        self.bodybottom : pygame.surface
 
 
     def drawBrick (self):
@@ -53,7 +52,7 @@ class Bricks():
         self.bottomheight = borderheight - self.bottomtop
         self.bodybottom=pygame.draw.rect(self.where, self.colour, [self.left, self.bottomtop, self.width, self.bottomheight])  
 
-    def walk(self):        
+    def walk(self):
         self.left -= self.speed
 
     # not included jet
@@ -78,6 +77,7 @@ class Pird():
         self.jumpVar = -16
         self.player = ""
         self.counter = 0
+        self.body : pygame.Surface
 
     def drawPird(self):
         self.body=pygame.draw.ellipse(self.where, self.colour, [self.left, self.top, self.width, self.height])
@@ -95,11 +95,10 @@ class Pird():
             self.jumpVar = 15
 
         if self.jumpVar >= -15:
-            n = 1
+            num = 1
             if self.jumpVar < 0:
-                n = -1
-            self.top -= (self.jumpVar**2.1)*0.17*n
-
+                num = -1
+            self.top -= (self.jumpVar**2.1)*0.17*num
         self.speed = downspeed
 
 
@@ -108,12 +107,15 @@ class Bottom():
         self.where = where
         self.colour = colour
         self.left = left
-        self.top = top 
+        self.top = top
         self.width = width
         self.height = height
+        self.body : pygame.surface
 
     def draw(self):
-        self.body=pygame.draw.rect(self.where, self.colour, [self.left, self.top, self.width, self.height])
+        self.body=pygame.draw.rect(self.where,
+                                   self.colour,
+                                  [self.left, self.top, self.width, self.height])
 
 
 # ======================================
@@ -128,11 +130,11 @@ pygame.display.set_caption("FlabbyPird")
 # objects
 # =========================
 
-border              =    Bottom(screen, GREEN, 0, borderheight, Width, partikel*2.5)
-pird                =    Pird(screen,RED, Width*0.3, Height/2-partikel*2, partikel*4, partikel*3, downspeed)
-topBrickHeight      =    random.randint(Height*0.3, Height*0.6)
-startBrick          =    Bricks(screen, YELLOW , Width*2, 0, partikel*2, Height*0.4, brickspeed)
-startBrick.height   =    topBrickHeight
+border = Bottom(screen, GREEN, 0, borderheight, Width, partikel*2.5)
+pird = Pird(screen,RED, Width*0.3, Height/2-partikel*2, partikel*4, partikel*3, downspeed)
+topBrickHeight = random.randint(Height*0.3, Height*0.6)
+startBrick = Bricks(screen, YELLOW , Width*2, 0, partikel*2, Height*0.4, brickspeed)
+startBrick.height = topBrickHeight
 
 # M E N U
 # =========================================
@@ -144,7 +146,10 @@ class Menue():
     # =========================================
     @staticmethod
     def mainManue():
-        menu = pygame_menu.Menu('FLABBY PIRD', Menue.height, Menue.width, theme=pygame_menu.themes.THEME_SOLARIZED)
+        menu = pygame_menu.Menu('FLABBY PIRD',
+                                 Menue.height,
+                                 Menue.width,
+                                 theme=pygame_menu.themes.THEME_SOLARIZED)
         menu.add.button('PLAY', start_the_game)
         menu.add.button('SCORE', Menue.scoreboard)
         menu.add.button('QUIT', pygame_menu.events.EXIT)
@@ -160,8 +165,12 @@ class Menue():
 
     @staticmethod
     def score(daCounter):
-        menu = pygame_menu.Menu('SCORE', Menue.height, Menue.width, theme=pygame_menu.themes.THEME_SOLARIZED)
-        pird.player = menu.add.text_input('Name: ', default='PLR', onchange=Menue.get_name ,maxchar=3, ).get_value().upper()
+        menu = pygame_menu.Menu('SCORE', Menue.height, Menue.width,
+                                 theme=pygame_menu.themes.THEME_SOLARIZED)
+        pird.player = menu.add.text_input('Name: ',
+                                           default='PLR',
+                                           onchange=Menue.get_name ,
+                                           maxchar=3, ).get_value().upper()
         menu.add.label(daCounter)
         menu.add.button('SAVE', DB.dbInput)
         menu.add.button('MENU', Menue.mainManue)
@@ -173,7 +182,8 @@ class Menue():
     # ==========================================
     @staticmethod
     def scoreboard():
-        menu = pygame_menu.Menu('SCOREBOARD', Menue.height, Menue.width, theme=pygame_menu.themes.THEME_SOLARIZED)
+        menu = pygame_menu.Menu('SCOREBOARD',Menue.height,Menue.width,
+                                theme=pygame_menu.themes.THEME_SOLARIZED)
         menu.add.label(DB.dbOutput(0))
         menu.add.label(DB.dbOutput(1))
         menu.add.label(DB.dbOutput(2))
@@ -185,82 +195,86 @@ class Menue():
 
 # S C O R E _ D B _ M A N A G E M E N T
 # =============================================
-
-class DB():  
+class DB():
+    @staticmethod
     def dbRefresh():
         try:
-            db = sqlite3.connect("flabbyPird.db")
-            cursor = db.cursor()
+            database = sqlite3.connect("flabbyPird.db")
+            cursor = database.cursor()
             delete = "DELETE FROM score"
             cursor.execute(delete)
-            db.commit()         
+            database.commit()
             print("DELETE FINISH")
             insert = "INSERT INTO score(name, Score) VALUES ('---', 0); "
             for i in range(3):
                 cursor.execute(insert)
-            db.commit()
+            database.commit()
             print("RESET COMPLETE")
             Menue.scoreboard()
         except: 
             print("Fehler beim Reset - Datensatz wurde nicht reseted !")
-            print("Unexpected error:", sys.exc_info()[0],sys.exc_info()[1],sys.exc_info()[2] )  
+            print("Unexpected error:", sys.exc_info()[0],sys.exc_info()[1],sys.exc_info()[2] )
         finally:
-            db.close()
+            database.close()
 
+    @staticmethod
     def dbInput():
         try:
-            db = sqlite3.connect("flabbyPird.db")
-            cursor = db.cursor()
+            database = sqlite3.connect("flabbyPird.db")
+            cursor = database.cursor()
             name = str(pird.player)
             sco = str(pird.counter)
-            sql = "INSERT INTO score (name, Score) VALUES (?,?);"
-            cursor.execute(sql,(name,sco))
-            db.commit()         
+            sql = f"INSERT INTO score(name, Score) VALUES ('{name}', {sco})"
+            cursor.execute(sql)
+            database.commit()
             print("FINISH")
             Menue.scoreboard()
         except: 
             print("Fehler beim INSERT - Datensatz wurde nicht gespeichert !")
             print("Unexpected error:", sys.exc_info()[0],sys.exc_info()[1],sys.exc_info()[2] )  
         finally:
-            db.close()
-
+            database.close()
+    @staticmethod
     def dbOutput(lvl):
         try:
-            db = sqlite3.connect("flabbyPird.db")
-            cursor = db.cursor()
+            database = sqlite3.connect("flabbyPird.db")
+            cursor = database.cursor()
             sql = "SELECT * FROM score ORDER BY Score DESC;"
             cursor.execute(sql)
             catch = cursor.fetchall()
-            zeile = catch[lvl]     
-            output = zeile[0] + ' : ' + str(zeile[1])
+            zeile = catch[lvl]
+            name = str(zeile[0])
+            count = str(zeile[1])
+            output = name + ' : ' + count
             # print(output)
-            db.commit()
+            database.commit()
             return output
         except: 
             print("Fehler beim SELECT - Datensatz konnte nicht gelesen werden !")
             print("Unexpected error:", sys.exc_info()[0],sys.exc_info()[1],sys.exc_info()[2] )  
         finally:
-            db.close()
-
+            database.close()
+    @staticmethod
     def find_smallest_counter():
+        min_list = []
         try:
-            db = sqlite3.connect("flabbyPird.db")
-            cursor = db.cursor()
-            sql = "SELECT MIN(Score) FROM score;"
+            database = sqlite3.connect("flabbyPird.db")
+            cursor = database.cursor()
+            #sql = "SELECT MIN(Score) FROM score WHERE score < (SELECT Score FROM score ORDER BY Score DESC LIMIT 3);"
+            sql = "SELECT Score FROM score ORDER BY Score DESC LIMIT 3;"
             cursor.execute(sql)
-            catch = cursor.fetchone()
-            db.commit()
-            sol = catch[0]
+            #catch = cursor.fetchone()
+            catch = cursor.fetchall()
+            database.commit()
+            
+            sol = min([x[0] for x in catch])
             print(sol)
             return sol
         except: 
             print("Fehler beim Search - Datensatz konnte nicht gelesen werden !")
             print("Unexpected error:", sys.exc_info()[0],sys.exc_info()[1],sys.exc_info()[2] )  
         finally:
-            db.close()
-
-
-
+            database.close()
 
 # DEFAULT SETTINGS
 # ============================================
@@ -278,7 +292,7 @@ def default():
     # DEFAULT SETTINGS FOR BRICKS
     # ========================================
     startBrick.left = Width*2
-    startBrick.top = 0 
+    startBrick.top = 0
     startBrick.bottomtop = 0
     startBrick.width = partikel*2
     startBrick.height = Height*0.4
@@ -286,13 +300,10 @@ def default():
     startBrick.speed = brickspeed
     startBrick.gapHeight = Height/4
     startBrick.gaplocker = random.randint(Height*0.3, Height*0.6)
-
     #print("DEFAUL-VALUES SETTED")
-
 # ============================================
 
 # SHOW SCORE:
-
 def showScore():
     my_font = pygame.font.Font(None, 50)
     surface = my_font.render(str(pird.counter), True, (255,255,255))
@@ -301,13 +312,8 @@ def showScore():
     screen.blit(surface, text_rect)
 
 
-# START OBJECT
-# ===============================
-
-
 # M A I N _ G A M E
 # =================================================
-
 def start_the_game():
     smalles_counter = int(DB.find_smallest_counter())
     pird.counter = 0
@@ -319,7 +325,7 @@ def start_the_game():
         # ====== suicide pird
         border.draw()
         pird.drawPird()
-        pird.fallDown()        
+        pird.fallDown()
         # ============================
         # ====== the walking bricks
         for i in bricks:
@@ -328,7 +334,10 @@ def start_the_game():
             if i.left <= Width*0.4 and i.left >= Width*0.39:
                 pird.counter += 1
                 topBrickHeight = random.randint(Height*0.2, Height*0.8)
-                bricks.append(Bricks(screen, YELLOW, Width + partikel , 0, partikel*2, startBrick.height, brickspeed))
+                bricks.append(Bricks(screen,
+                                     YELLOW,
+                                     Width + partikel , 0, partikel*2,
+                                     startBrick.height, brickspeed))
                 bricks[pird.counter].height = topBrickHeight
 
             # COLLISSION DETECTION
