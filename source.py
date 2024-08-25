@@ -52,7 +52,7 @@ class Bricks():
         self.speed = speed
         self.gap_height = HEIGHT/4
         # gab position between bricks
-        self.gaplocker = random.randint(HEIGHT*0.3, HEIGHT*0.6)
+        self.gaplocker = random.uniform(HEIGHT*0.3, HEIGHT*0.6)
         #empty objects are filled in draw_bricks-method
         self.bodytop : pygame.surface
         self.bodybottom : pygame.surface
@@ -168,7 +168,7 @@ pygame.display.set_caption("FlabbyPird")
 # =========================
 border = Bottom(screen, GREEN, 0, BORDER_HEIGHT, WIDTH, PARTIKEL*2.5)
 pird = Pird(screen,RED, WIDTH*0.3, HEIGHT/2-PARTIKEL*2, PARTIKEL*4, PARTIKEL*3, DOWN_SPEED)
-topBrickHeight = random.randint(HEIGHT*0.3, HEIGHT*0.6)
+topBrickHeight = random.uniform(HEIGHT*0.3, HEIGHT*0.6)
 startBrick = Bricks(screen, YELLOW , WIDTH*2, 0, PARTIKEL*2, HEIGHT*0.4, BRICK_SPEED)
 startBrick.height = topBrickHeight
 
@@ -365,7 +365,7 @@ def default():
     startBrick.bottomheight = 0
     startBrick.speed = BRICK_SPEED
     startBrick.gap_height = HEIGHT/4
-    startBrick.gaplocker = random.randint(HEIGHT*0.3, HEIGHT*0.6)
+    startBrick.gaplocker = random.uniform(HEIGHT*0.3, HEIGHT*0.6)
 # =================================================
 
 
@@ -401,7 +401,7 @@ def start_the_game():
             brick.walk()
             if brick.left <= WIDTH*0.4 and brick.left >= WIDTH*0.39:
                 pird.counter += 1
-                top_brick_height = random.randint(HEIGHT*0.2, HEIGHT*0.8)
+                top_brick_height = random.uniform(HEIGHT*0.2, HEIGHT*0.8)
                 #create new Bricks in in bricklist
                 bricks.append(Bricks(screen,
                                      YELLOW,
